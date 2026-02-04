@@ -1,0 +1,543 @@
+# Lab 6: Router Configuration with Static Routing
+## Step-by-Step Manual
+
+---
+
+## WHAT IS STATIC ROUTING?
+
+Static routing is when you manually tell routers how to reach networks they're 
+not directly connected to. The routes don't change unless you change them manually.
+
+**Use cases:**
+- Small networks
+- Predictable network topology
+- Backup routes
+- Security (routes don't advertise)
+
+---
+
+## STEP 1: BUILD THE NETWORK TOPOLOGY
+
+### Add Devices:
+- 3 Routers (2911 or 1841)
+- 3 Switches (2960)
+- 6 PCs (2 per switch)
+
+### IMPORTANT: Add Serial Ports to Routers First!
+
+**For each router:**
+1. Click Router → Physical Tab
+2. Turn OFF router (power button)
+3. Drag **HWIC-2T** module from left panel to empty slot
+4. Turn ON router (power button)
+5. Wait for router to boot up
+
+This adds Serial interfaces (Serial0/0/0 and Serial0/0/1)
+
+---
+
+## STEP 2: CONNECT DEVICES
+
+### Connect PCs to Switches (Copper Straight-Through):
+- PC0 → Switch0
+- PC1 → Switch0
+- PC2 → Switch1
+- PC3 → Switch1
+- PC4 → Switch2
+- PC5 → Switch2
+
+### Connect Switches to Routers (Copper Straight-Through):
+- Switch0 → Router0 FastEthernet0/0
+- Switch1 → Router1 FastEthernet0/0
+- Switch2 → Router2 FastEthernet0/0
+
+### Connect Routers Together (Serial DCE Cable):
+**Router0 to Router1:**
+- Click Serial DCE cable (clock icon with solid line)
+- Router0 Serial0/0/0 → Router1 Serial0/0/0
+
+**Router1 to Router2:**
+- Click Serial DCE cable
+- Router1 Serial0/0/1 → Router2 Serial0/0/1
+
+**Note:** One end must be DCE (provides clock signal)
+
+---
+
+## STEP 3: CONFIGURE PC IP ADDRESSES
+
+### Network 1 (Router0):
+**PC0:**
+- IP: 192.168.1.2
+- Subnet: 255.255.255.0
+- Gateway: 192.168.1.1
+
+**PC1:**
+- IP: 192.168.1.3
+- Subnet: 255.255.255.0
+- Gateway: 192.168.1.1
+
+### Network 2 (Router1):
+**PC2:**
+- IP: 192.168.11.2
+- Subnet: 255.255.255.0
+- Gateway: 192.168.11.1
+
+**PC3:**
+- IP: 192.168.11.3
+- Subnet: 255.255.255.0
+- Gateway: 192.168.11.1
+
+### Network 3 (Router2):
+**PC4:**
+- IP: 192.168.111.2
+- Subnet: 255.255.255.0
+- Gateway: 192.168.111.1
+
+**PC5:**
+- IP: 192.168.111.3
+- Subnet: 255.255.255.0
+- Gateway: 192.168.111.1
+
+---
+
+## STEP 4: CONFIGURE ROUTER0
+
+### Click Router0 → CLI Tab
+
+```
+enable
+configure terminal
+```
+
+### Configure FastEthernet (LAN side):
+```
+interface fastEthernet 0/0
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+exit
+```
+
+### Configure Serial (WAN side to Router1):
+```
+interface serial 0/0/0
+ip address 202.20.2.1 255.255.255.0
+clock rate 64000
+no shutdown
+exit
+```
+
+**Note:** Add "clock rate" only on DCE side
+
+---
+
+## STEP 5: CONFIGURE ROUTER1
+
+### Click Router1 → CLI Tab
+
+```
+enable
+configure terminal
+```
+
+### Configure FastEthernet (LAN side):
+```
+interface fastEthernet 0/0
+ip address 192.168.11.1 255.255.255.0
+no shutdown
+exit
+```
+
+### Configure Serial to Router0:
+```
+interface serial 0/0/0
+ip address 202.20.2.2 255.255.255.0
+no shutdown
+exit
+```
+
+### Configure Serial to Router2:
+```
+interface serial 0/0/1
+ip address 202.22.2.1 255.255.255.0
+clock rate 64000
+no shutdown
+exit
+```
+
+---
+
+## STEP 6: CONFIGURE ROUTER2
+
+### Click Router2 → CLI Tab
+
+```
+enable
+configure terminal
+```
+
+### Configure FastEthernet (LAN side):
+```
+interface fastEthernet 0/0
+ip address 192.168.111.1 255.255.255.0
+no shutdown
+exit
+```
+
+### Configure Serial to Router1:
+```
+interface serial 0/0/1
+ip address 202.22.2.2 255.255.255.0
+no shutdown
+exit
+```
+
+---
+
+## STEP 7: VERIFY INTERFACES
+
+### On each router, run:
+```
+show ip interface brief
+```
+
+**You should see all interfaces "up/up"**
+
+If serial interfaces show "down/down", check:
+- Cable connections
+- "no shutdown" command
+- Clock rate on DCE side
+
+---
+
+## STEP 8: ADD STATIC ROUTES ON ROUTER0
+
+```
+enable
+configure terminal
+```
+
+**Route to Router1's LAN (192.168.11.0):**
+```
+ip route 192.168.11.0 255.255.255.0 202.20.2.2
+```
+
+**Route to Router2's LAN (192.168.111.0):**
+```
+ip route 192.168.111.0 255.255.255.0 202.20.2.2
+```
+
+**Explanation:**
+- `ip route [destination-network] [subnet-mask] [next-hop-IP]`
+- Next-hop is the IP of the next router interface
+
+```
+exit
+copy running-config startup-config
+```
+
+---
+
+## STEP 9: ADD STATIC ROUTES ON ROUTER1
+
+```
+enable
+configure terminal
+```
+
+**Route to Router0's LAN (192.168.1.0):**
+```
+ip route 192.168.1.0 255.255.255.0 202.20.2.1
+```
+
+**Route to Router2's LAN (192.168.111.0):**
+```
+ip route 192.168.111.0 255.255.255.0 202.22.2.2
+```
+
+```
+exit
+copy running-config startup-config
+```
+
+---
+
+## STEP 10: ADD STATIC ROUTES ON ROUTER2
+
+```
+enable
+configure terminal
+```
+
+**Route to Router0's LAN (192.168.1.0):**
+```
+ip route 192.168.1.0 255.255.255.0 202.22.2.1
+```
+
+**Route to Router1's LAN (192.168.11.0):**
+```
+ip route 192.168.11.0 255.255.255.0 202.22.2.1
+```
+
+```
+exit
+copy running-config startup-config
+```
+
+---
+
+## STEP 11: VERIFY ROUTING TABLES
+
+### On each router:
+```
+show ip route
+```
+
+**You should see:**
+- **C** - Directly connected networks
+- **S** - Static routes you added
+
+**Example output for Router0:**
+```
+C    192.168.1.0/24 is directly connected, FastEthernet0/0
+C    202.20.2.0/24 is directly connected, Serial0/0/0
+S    192.168.11.0/24 [1/0] via 202.20.2.2
+S    192.168.111.0/24 [1/0] via 202.20.2.2
+```
+
+---
+
+## STEP 12: TEST CONNECTIVITY
+
+### From PC0 (Router0's network):
+
+**Ping PC1 (same network):**
+```
+ping 192.168.1.3
+```
+**Expected:** ✓ Success
+
+**Ping PC2 (Router1's network):**
+```
+ping 192.168.11.2
+```
+**Expected:** ✓ Success
+
+**Ping PC4 (Router2's network):**
+```
+ping 192.168.111.2
+```
+**Expected:** ✓ Success
+
+**Screenshot this!**
+
+---
+
+## STEP 13: TRACEROUTE TEST
+
+### From PC0:
+
+```
+tracert 192.168.111.2
+```
+
+**Expected hops:**
+1. 192.168.1.1 (Router0)
+2. 202.20.2.2 (Router1 serial interface)
+3. 192.168.111.2 (PC4)
+
+This shows the path packets take!
+
+---
+
+## ALTERNATIVE: CONFIGURE USING GUI
+
+### For Router Interfaces (GUI Method):
+
+1. Click Router → Config Tab
+2. Click interface (e.g., FastEthernet0/0)
+3. Check "On" checkbox
+4. Enter IP Address and Subnet Mask
+5. Click elsewhere to apply
+
+### For Static Routes (GUI Method):
+
+1. Click Router → Config Tab
+2. Click "Routing" → "Static"
+3. Enter:
+   - Network: 192.168.11.0
+   - Mask: 255.255.255.0
+   - Next Hop: 202.20.2.2
+4. Click "Add"
+
+**Note:** CLI method is preferred for learning and reports!
+
+---
+
+## STATIC ROUTE COMMAND BREAKDOWN
+
+```
+ip route 192.168.111.0 255.255.255.0 202.20.2.2
+```
+
+**Parts:**
+- `ip route` - Command to add static route
+- `192.168.111.0` - Destination network
+- `255.255.255.0` - Subnet mask of destination
+- `202.20.2.2` - Next hop IP (where to forward packets)
+
+**Alternative format (using exit interface):**
+```
+ip route 192.168.111.0 255.255.255.0 serial 0/0/0
+```
+
+---
+
+## COMMAND SUMMARY
+
+### Interface Configuration:
+```
+interface [type] [number]        - Select interface
+ip address [IP] [MASK]           - Assign IP address
+clock rate [rate]                - Set clock (DCE side only)
+no shutdown                      - Enable interface
+show ip interface brief          - Show all interfaces
+```
+
+### Static Routing:
+```
+ip route [network] [mask] [next-hop]  - Add static route
+show ip route                         - Display routing table
+show ip route static                  - Show only static routes
+no ip route [network] [mask] [next-hop] - Remove static route
+```
+
+### Verification:
+```
+show running-config              - Show current config
+show ip protocols                - Show routing protocols
+ping [IP]                        - Test connectivity
+traceroute [IP]                  - Trace packet path
+```
+
+---
+
+## NETWORK SUMMARY TABLE
+
+| Device   | Interface    | IP Address      | Connected To        |
+|----------|--------------|-----------------|---------------------|
+| Router0  | Fa0/0        | 192.168.1.1     | Switch0             |
+| Router0  | Se0/0/0      | 202.20.2.1      | Router1 Se0/0/0     |
+| Router1  | Fa0/0        | 192.168.11.1    | Switch1             |
+| Router1  | Se0/0/0      | 202.20.2.2      | Router0 Se0/0/0     |
+| Router1  | Se0/0/1      | 202.22.2.1      | Router2 Se0/0/1     |
+| Router2  | Fa0/0        | 192.168.111.1   | Switch2             |
+| Router2  | Se0/0/1      | 202.22.2.2      | Router1 Se0/0/1     |
+
+---
+
+## STATIC ROUTES TABLE
+
+| Router   | Destination     | Mask            | Next Hop    |
+|----------|-----------------|-----------------|-------------|
+| Router0  | 192.168.11.0    | 255.255.255.0   | 202.20.2.2  |
+| Router0  | 192.168.111.0   | 255.255.255.0   | 202.20.2.2  |
+| Router1  | 192.168.1.0     | 255.255.255.0   | 202.20.2.1  |
+| Router1  | 192.168.111.0   | 255.255.255.0   | 202.22.2.2  |
+| Router2  | 192.168.1.0     | 255.255.255.0   | 202.22.2.1  |
+| Router2  | 192.168.11.0    | 255.255.255.0   | 202.22.2.1  |
+
+---
+
+## SCREENSHOTS NEEDED
+
+1. **Complete network topology** with all 3 routers
+2. **Router0 interface configuration** (show ip interface brief)
+3. **Router1 interface configuration** (show ip interface brief)
+4. **Router2 interface configuration** (show ip interface brief)
+5. **Router0 routing table** (show ip route)
+6. **Router1 routing table** (show ip route)
+7. **Router2 routing table** (show ip route)
+8. **Static route configuration** on Router0
+9. **Successful ping** from PC0 to PC4
+10. **Traceroute** from PC0 to PC4
+
+---
+
+## TROUBLESHOOTING
+
+### PCs can't ping within same network:
+- Check PC IP configuration
+- Check router interface is up: `show ip interface brief`
+- Verify gateway on PC matches router IP
+
+### PCs can't ping across routers:
+- Check routing table: `show ip route`
+- Verify static routes are added correctly
+- Check next-hop IPs are correct
+- Ping next-hop from router: `ping 202.20.2.2`
+
+### Serial interfaces down:
+- Check cable type (use Serial DCE)
+- Add clock rate on DCE side
+- Verify "no shutdown" on both ends
+- Check physical layer (red X vs orange dot)
+
+### Routes not appearing:
+- Check subnet mask is correct
+- Verify next-hop IP is reachable
+- Use `show ip route` to verify
+- Check for typos in IP addresses
+
+**Common mistakes:**
+- Forgot to add serial modules (HWIC-2T)
+- Forgot clock rate on DCE side
+- Wrong next-hop IP in static routes
+- Forgot "no shutdown" on interfaces
+- Typos in IP addresses
+- Not saving configuration
+
+---
+
+## STATIC vs DYNAMIC ROUTING
+
+### Static Routing:
+**Pros:**
+- Simple to configure
+- No routing protocol overhead
+- Predictable paths
+- More secure (no route advertisements)
+- Lower CPU/memory usage
+
+**Cons:**
+- Manual configuration required
+- Doesn't adapt to network changes
+- Not scalable for large networks
+- Administrator must know entire topology
+
+### Dynamic Routing:
+**Pros:**
+- Automatic route discovery
+- Adapts to topology changes
+- Scalable for large networks
+- Fault tolerant
+
+**Cons:**
+- More complex
+- Requires more resources
+- Routing protocol overhead
+- Convergence time required
+
+---
+
+## CONCLUSION TEMPLATE
+
+Successfully configured static routing across three routers connecting three 
+separate networks. Manual routes were added to enable communication between 
+all networks. Static routing proved effective for this small, stable network 
+topology. All PCs across different networks can communicate, demonstrating 
+proper routing table configuration and next-hop selection.
+
+---
+
+END OF MANUAL

@@ -1,0 +1,384 @@
+# Lab 4: VLAN Configuration and Inter-VLAN Routing
+## Step-by-Step Manual
+
+---
+
+## PART 1: SETUP TWO VLANs IN A SINGLE SWITCH
+
+### STEP 1: BUILD THE NETWORK
+
+**Add Devices:**
+- 1 Switch (2960)
+- 4 PCs
+
+**Connect Devices (Copper Straight-Through):**
+- PC0 → Switch0 Port FastEthernet0/1
+- PC1 → Switch0 Port FastEthernet0/2
+- PC2 → Switch0 Port FastEthernet0/3
+- PC3 → Switch0 Port FastEthernet0/4
+
+---
+
+### STEP 2: CONFIGURE PC IP ADDRESSES
+
+**VLAN 10 PCs:**
+- PC0: IP 192.168.10.1, Subnet 255.255.255.0
+- PC1: IP 192.168.10.2, Subnet 255.255.255.0
+
+**VLAN 20 PCs:**
+- PC2: IP 192.168.20.1, Subnet 255.255.255.0
+- PC3: IP 192.168.20.2, Subnet 255.255.255.0
+
+---
+
+### STEP 3: CREATE VLANs ON SWITCH
+
+**Click Switch0 → CLI Tab → Press Enter**
+
+```
+enable
+configure terminal
+vlan 10
+name Software
+exit
+vlan 20
+name Student
+exit
+```
+
+---
+
+### STEP 4: ASSIGN PORTS TO VLANs
+
+**Assign PC0 and PC1 to VLAN 10:**
+```
+interface fastEthernet 0/1
+switchport mode access
+switchport access vlan 10
+exit
+
+interface fastEthernet 0/2
+switchport mode access
+switchport access vlan 10
+exit
+```
+
+**Assign PC2 and PC3 to VLAN 20:**
+```
+interface fastEthernet 0/3
+switchport mode access
+switchport access vlan 20
+exit
+
+interface fastEthernet 0/4
+switchport mode access
+switchport access vlan 20
+exit
+```
+
+**Exit and save:**
+```
+exit
+copy running-config startup-config
+```
+
+---
+
+### STEP 5: VERIFY VLAN CONFIGURATION
+
+```
+show vlan brief
+```
+
+**You should see:**
+- VLAN 10: Fa0/1, Fa0/2
+- VLAN 20: Fa0/3, Fa0/4
+
+---
+
+### STEP 6: TEST CONNECTIVITY (SAME VLAN)
+
+**From PC1 (VLAN 10) ping PC0 (VLAN 10):**
+```
+ping 192.168.10.1
+```
+**Expected:** ✓ Success (4 replies)
+
+**Screenshot this!**
+
+---
+
+### STEP 7: TEST CONNECTIVITY (DIFFERENT VLAN)
+
+**From PC1 (VLAN 10) ping PC2 (VLAN 20):**
+```
+ping 192.168.20.1
+```
+**Expected:** ✗ Request timed out (No connectivity between VLANs)
+
+**Screenshot this!**
+
+This proves VLANs are isolated.
+
+---
+
+## PART 2: INTER-VLAN ROUTING USING LAYER 3 SWITCH
+
+### STEP 8: BUILD NEW NETWORK TOPOLOGY
+
+**Remove old setup. Add new devices:**
+- 1 Multilayer Switch 3650 (Layer 3 Switch)
+- 2 Regular Switches 2960 (Switch0 and Switch1)
+- 4 PCs
+
+**Connect:**
+- PC0 → Switch0 Port Fa0/1
+- PC1 → Switch0 Port Fa0/2
+- PC2 → Switch1 Port Fa0/1
+- PC3 → Switch1 Port Fa0/2
+- Switch0 Port Fa0/24 → Multilayer Switch Gig1/0/1
+- Switch1 Port Fa0/24 → Multilayer Switch Gig1/0/2
+
+---
+
+### STEP 9: CONFIGURE PC IP ADDRESSES
+
+**VLAN 10 (Connected to Switch0):**
+- PC0: IP 192.168.10.2, Subnet 255.255.255.0, Gateway 192.168.10.1
+- PC1: IP 192.168.10.3, Subnet 255.255.255.0, Gateway 192.168.10.1
+
+**VLAN 20 (Connected to Switch1):**
+- PC2: IP 192.168.11.2, Subnet 255.255.255.0, Gateway 192.168.11.1
+- PC3: IP 192.168.11.3, Subnet 255.255.255.0, Gateway 192.168.11.1
+
+---
+
+### STEP 10: CONFIGURE SWITCH0 (VLAN 10)
+
+**Click Switch0 → CLI Tab**
+
+```
+enable
+configure terminal
+vlan 10
+name Software
+exit
+
+interface range fastEthernet 0/1-2
+switchport mode access
+switchport access vlan 10
+exit
+
+interface fastEthernet 0/24
+switchport mode trunk
+exit
+```
+
+**Save:**
+```
+exit
+copy running-config startup-config
+```
+
+---
+
+### STEP 11: CONFIGURE SWITCH1 (VLAN 20)
+
+**Click Switch1 → CLI Tab**
+
+```
+enable
+configure terminal
+vlan 20
+name Student
+exit
+
+interface range fastEthernet 0/1-2
+switchport mode access
+switchport access vlan 20
+exit
+
+interface fastEthernet 0/24
+switchport mode trunk
+exit
+```
+
+**Save:**
+```
+exit
+copy running-config startup-config
+```
+
+---
+
+### STEP 12: CONFIGURE MULTILAYER SWITCH (LAYER 3)
+
+**Click Multilayer Switch → CLI Tab**
+
+**Create VLANs:**
+```
+enable
+configure terminal
+vlan 10
+name Software
+exit
+vlan 20
+name Student
+exit
+```
+
+**Configure trunk ports to access switches:**
+```
+interface gigabitEthernet 1/0/1
+switchport trunk encapsulation dot1q
+switchport mode trunk
+exit
+
+interface gigabitEthernet 1/0/2
+switchport trunk encapsulation dot1q
+switchport mode trunk
+exit
+```
+
+**Enable IP routing:**
+```
+ip routing
+```
+
+**Create VLAN interfaces (SVIs) for routing:**
+```
+interface vlan 10
+ip address 192.168.10.1 255.255.255.0
+no shutdown
+exit
+
+interface vlan 20
+ip address 192.168.11.1 255.255.255.0
+no shutdown
+exit
+```
+
+**Exit and save:**
+```
+exit
+copy running-config startup-config
+```
+
+---
+
+### STEP 13: VERIFY CONFIGURATION
+
+**On Multilayer Switch:**
+```
+show vlan brief
+show ip interface brief
+show ip route
+```
+
+**On Switch0 and Switch1:**
+```
+show vlan brief
+show interfaces trunk
+```
+
+---
+
+### STEP 14: TEST INTER-VLAN CONNECTIVITY
+
+**From PC0 (VLAN 10):**
+
+**Ping PC1 (same VLAN):**
+```
+ping 192.168.10.3
+```
+**Expected:** ✓ Success
+
+**Ping PC2 (different VLAN):**
+```
+ping 192.168.11.2
+```
+**Expected:** ✓ Success (Inter-VLAN routing working!)
+
+**Ping PC3 (different VLAN):**
+```
+ping 192.168.11.3
+```
+**Expected:** ✓ Success
+
+**Screenshot these successful pings!**
+
+---
+
+## COMMAND SUMMARY
+
+### VLAN Commands:
+```
+vlan [number]              - Create VLAN
+name [vlan_name]           - Name the VLAN
+switchport mode access     - Set port as access port
+switchport access vlan [#] - Assign port to VLAN
+switchport mode trunk      - Set port as trunk port
+show vlan brief            - Display VLAN info
+```
+
+### Layer 3 Switch Commands:
+```
+ip routing                 - Enable routing
+interface vlan [number]    - Create VLAN interface
+ip address [IP] [MASK]     - Assign IP to VLAN interface
+no shutdown                - Activate interface
+show ip route              - Show routing table
+switchport trunk encapsulation dot1q - Set trunk encapsulation
+```
+
+---
+
+## SCREENSHOTS NEEDED
+
+**Part 1 (Single Switch VLANs):**
+1. Network topology
+2. VLAN configuration (show vlan brief)
+3. Successful ping (same VLAN: PC1 → PC0)
+4. Failed ping (different VLAN: PC1 → PC2)
+
+**Part 2 (Inter-VLAN Routing):**
+1. Network topology with 3 switches
+2. VLAN configuration on Switch0
+3. VLAN configuration on Switch1
+4. VLAN and trunk config on Multilayer Switch
+5. Successful pings from PC0 to PC2 and PC3
+
+---
+
+## TROUBLESHOOTING
+
+**VLANs not isolating traffic:**
+- Check VLAN assignment: show vlan brief
+- Verify ports are in access mode
+- Check PC IPs are in correct subnets
+
+**Inter-VLAN routing not working:**
+- Verify "ip routing" is enabled on Layer 3 switch
+- Check trunk ports: show interfaces trunk
+- Verify VLAN interfaces are up: show ip interface brief
+- Check gateways on PCs match VLAN interface IPs
+- Ensure "no shutdown" on VLAN interfaces
+
+**Common mistakes:**
+- Forgot "switchport mode trunk" on connections to Layer 3 switch
+- Didn't enable "ip routing" on Multilayer Switch
+- Wrong gateway IPs on PCs
+- Forgot "no shutdown" on VLAN interfaces
+
+---
+
+## CONCLUSION TEMPLATE
+
+Successfully configured VLANs on Layer 2 switches to isolate network traffic. 
+Demonstrated that devices in different VLANs cannot communicate without routing. 
+Implemented Inter-VLAN routing using a Layer 3 Multilayer Switch, enabling 
+communication between VLANs while maintaining network segmentation and security.
+
+---
+
+END OF MANUAL

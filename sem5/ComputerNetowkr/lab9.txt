@@ -1,0 +1,551 @@
+# Lab 9: Configuration of Various Servers
+## Step-by-Step Manual
+
+---
+
+## WHAT ARE SERVERS?
+
+Servers are specialized computers that provide services to client devices on a network.
+
+**In this lab we configure:**
+1. DHCP Server (automatically assigns IP addresses)
+2. FTP Server (file transfer)
+3. HTTP Server (web hosting)
+4. Firewall (security/access control)
+
+---
+
+## PART 1: DHCP SERVER CONFIGURATION
+
+### What is DHCP?
+DHCP (Dynamic Host Configuration Protocol) automatically assigns IP addresses 
+to devices instead of manual configuration.
+
+### STEP 1: BUILD DHCP NETWORK
+
+**Add Devices:**
+- 1 Server (Server-PT)
+- 1 Switch (2960)
+- 3 PCs
+
+**Connect (Copper Straight-Through):**
+- Server → Switch Port Fa0/1
+- PC0 → Switch Port Fa0/2
+- PC1 → Switch Port Fa0/3
+- PC2 → Switch Port Fa0/4
+
+---
+
+### STEP 2: CONFIGURE DHCP SERVER
+
+**Click Server → Desktop Tab → IP Configuration**
+
+**Set Static IP for Server:**
+- IP Address: 192.168.1.10
+- Subnet Mask: 255.255.255.0
+- Gateway: 192.168.1.1
+
+**Close IP Configuration**
+
+---
+
+### STEP 3: ENABLE DHCP SERVICE
+
+**Click Server → Services Tab → DHCP**
+
+1. **Service:** Turn ON (radio button)
+
+2. **Pool Name:** LAN_POOL
+
+3. **Default Gateway:** 192.168.1.1
+
+4. **DNS Server:** 192.168.1.10
+
+5. **Start IP Address:** 192.168.1.100
+
+6. **Subnet Mask:** 255.255.255.0
+
+7. **Maximum Number of Users:** 50
+
+8. Click **Add** button
+
+9. Click **Save** button
+
+**DHCP Server is now configured!**
+
+---
+
+### STEP 4: CONFIGURE PCs TO USE DHCP
+
+**For PC0, PC1, PC2:**
+
+1. Click PC → Desktop Tab → IP Configuration
+2. Select **DHCP** radio button (NOT Static)
+3. Wait a few seconds
+4. IP should be automatically assigned (192.168.1.100, 192.168.1.101, etc.)
+
+**Screenshot showing DHCP assigned IP!**
+
+---
+
+### STEP 5: VERIFY DHCP
+
+**On Server → Services → DHCP**
+
+Check the list at bottom - you should see assigned IPs with MAC addresses
+
+**Test connectivity:**
+- PC0 ping PC1: Should work
+- PC0 ping Server: Should work
+
+---
+
+## PART 2: FTP SERVER CONFIGURATION
+
+### What is FTP?
+FTP (File Transfer Protocol) allows users to upload and download files.
+
+### STEP 6: BUILD FTP NETWORK
+
+**Use same topology or create new:**
+- 1 Server
+- 1 Switch
+- 2 PCs
+
+**Connect all devices**
+
+---
+
+### STEP 7: CONFIGURE FTP SERVER IP
+
+**Click Server → Desktop → IP Configuration**
+
+- IP Address: 192.168.2.10
+- Subnet Mask: 255.255.255.0
+- Gateway: 192.168.2.1
+
+---
+
+### STEP 8: ENABLE FTP SERVICE
+
+**Click Server → Services Tab → FTP**
+
+1. **Service:** Turn ON
+
+2. **User Setup:**
+   - Username: admin
+   - Password: admin123
+   - Click **Add** button
+
+3. **Permissions:**
+   - Check **Write** (allows upload)
+   - Check **Read** (allows download)
+   - Check **Delete** (allows file deletion)
+   - Check **Rename** (allows renaming)
+   - Check **List** (allows viewing files)
+
+4. Click **Save**
+
+**FTP Server is ready!**
+
+---
+
+### STEP 9: CONFIGURE PC IP ADDRESSES
+
+**PC0:**
+- IP: 192.168.2.100
+- Subnet: 255.255.255.0
+- Gateway: 192.168.2.1
+
+**PC1:**
+- IP: 192.168.2.101
+- Subnet: 255.255.255.0
+- Gateway: 192.168.2.1
+
+---
+
+### STEP 10: ACCESS FTP FROM PC
+
+**Click PC0 → Desktop → Command Prompt**
+
+**Connect to FTP:**
+```
+ftp 192.168.2.10
+```
+
+**Login:**
+- Username: admin
+- Password: admin123
+
+**FTP Commands:**
+```
+dir                  - List files
+get filename         - Download file
+put filename         - Upload file
+delete filename      - Delete file
+bye                  - Exit FTP
+```
+
+**Alternative: Use Web Browser**
+
+**Click PC0 → Desktop → Web Browser**
+
+**URL:** `ftp://192.168.2.10`
+
+Enter username and password when prompted
+
+**Screenshot FTP connection!**
+
+---
+
+## PART 3: HTTP SERVER CONFIGURATION
+
+### What is HTTP?
+HTTP (HyperText Transfer Protocol) is used to host websites.
+
+### STEP 11: BUILD HTTP NETWORK
+
+**Use same or new topology:**
+- 1 Server
+- 1 Switch
+- 2 PCs
+
+---
+
+### STEP 12: CONFIGURE HTTP SERVER IP
+
+**Click Server → Desktop → IP Configuration**
+
+- IP Address: 192.168.3.10
+- Subnet Mask: 255.255.255.0
+- Gateway: 192.168.3.1
+
+---
+
+### STEP 13: ENABLE HTTP SERVICE
+
+**Click Server → Services Tab → HTTP**
+
+1. **Service:** Turn ON
+
+2. **Edit index.html (optional):**
+   - You can edit the default web page
+   - Type custom HTML content
+   
+3. Default page is already there - just turn ON service
+
+**HTTP Server is running!**
+
+---
+
+### STEP 14: CONFIGURE PC IP ADDRESSES
+
+**PC0:**
+- IP: 192.168.3.100
+- Subnet: 255.255.255.0
+- Gateway: 192.168.3.1
+
+**PC1:**
+- IP: 192.168.3.101
+- Subnet: 255.255.255.0
+- Gateway: 192.168.3.1
+
+---
+
+### STEP 15: ACCESS WEB SERVER FROM PC
+
+**Click PC0 → Desktop → Web Browser**
+
+**URL:** `http://192.168.3.10`
+
+**You should see the default web page!**
+
+**Screenshot the web page!**
+
+---
+
+## PART 4: FIREWALL CONFIGURATION (ACCESS CONTROL)
+
+### What is Firewall?
+Firewall controls which traffic is allowed or denied based on rules.
+
+### STEP 16: BUILD FIREWALL NETWORK
+
+**Add Devices:**
+- 1 Router (with firewall capability)
+- 2 Switches
+- 1 Server (on one side)
+- 2 PCs (on other side)
+
+**Connect:**
+- Server → Switch0 → Router Fa0/0
+- PC0, PC1 → Switch1 → Router Fa0/1
+
+---
+
+### STEP 17: CONFIGURE ROUTER INTERFACES
+
+**Click Router → CLI**
+
+```
+enable
+configure terminal
+
+interface fastEthernet 0/0
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+exit
+
+interface fastEthernet 0/1
+ip address 192.168.2.1 255.255.255.0
+no shutdown
+exit
+```
+
+---
+
+### STEP 18: CONFIGURE DEVICES
+
+**Server:**
+- IP: 192.168.1.10
+- Subnet: 255.255.255.0
+- Gateway: 192.168.1.1
+
+**PC0:**
+- IP: 192.168.2.100
+- Subnet: 255.255.255.0
+- Gateway: 192.168.2.1
+
+**PC1:**
+- IP: 192.168.2.101
+- Subnet: 255.255.255.0
+- Gateway: 192.168.2.1
+
+---
+
+### STEP 19: TEST WITHOUT FIREWALL
+
+**From PC0:**
+```
+ping 192.168.1.10
+```
+**Should work** ✓
+
+---
+
+### STEP 20: CONFIGURE ACCESS CONTROL LIST (ACL)
+
+**Click Router → CLI**
+
+### Create ACL to DENY PC0 access to Server:
+
+```
+enable
+configure terminal
+
+access-list 100 deny ip host 192.168.2.100 host 192.168.1.10
+access-list 100 permit ip any any
+
+interface fastEthernet 0/1
+ip access-group 100 in
+exit
+```
+
+**Command explanation:**
+- `access-list 100 deny` - Block traffic
+- `host 192.168.2.100` - From PC0
+- `host 192.168.1.10` - To Server
+- `permit ip any any` - Allow all other traffic
+- `ip access-group 100 in` - Apply ACL to incoming traffic
+
+---
+
+### STEP 21: TEST WITH FIREWALL (DENY)
+
+**From PC0:**
+```
+ping 192.168.1.10
+```
+**Should FAIL** ✗ (Request timed out)
+
+**From PC1:**
+```
+ping 192.168.1.10
+```
+**Should WORK** ✓ (PC1 is not blocked)
+
+**Screenshot the denied ping!**
+
+---
+
+### STEP 22: REMOVE DENY RULE (ALLOW ACCESS)
+
+**To allow PC0 again:**
+
+```
+enable
+configure terminal
+
+no access-list 100
+
+access-list 100 permit ip any any
+
+interface fastEthernet 0/1
+ip access-group 100 in
+exit
+```
+
+**Now PC0 can ping server again!**
+
+**Screenshot the allowed ping!**
+
+---
+
+## COMMAND SUMMARY
+
+### DHCP Server (GUI):
+- Services → DHCP → Turn ON
+- Set pool name, gateway, DNS, start IP
+- Click Add and Save
+
+### FTP Server (GUI):
+- Services → FTP → Turn ON
+- Add username/password
+- Set permissions (Read, Write, Delete, etc.)
+
+### HTTP Server (GUI):
+- Services → HTTP → Turn ON
+- Default page is ready
+
+### Firewall/ACL (CLI):
+```
+access-list [number] [permit|deny] [protocol] [source] [destination]
+interface [type] [number]
+ip access-group [ACL-number] [in|out]
+show access-lists                 - View ACLs
+no access-list [number]           - Remove ACL
+```
+
+---
+
+## SCREENSHOTS NEEDED
+
+**DHCP Server:**
+1. DHCP configuration on server
+2. PC receiving IP via DHCP
+3. DHCP bindings list on server
+
+**FTP Server:**
+4. FTP service enabled on server
+5. FTP user configuration
+6. FTP connection from PC (command prompt or browser)
+7. File listing in FTP
+
+**HTTP Server:**
+8. HTTP service enabled on server
+9. Web browser showing server's webpage
+
+**Firewall:**
+10. Network topology
+11. ACL configuration commands
+12. Denied ping (PC0 to server)
+13. Successful ping (PC1 to server)
+14. After removing deny rule - successful ping
+
+---
+
+## TROUBLESHOOTING
+
+### DHCP not working:
+- Check DHCP service is ON
+- Verify pool is created and saved
+- Check PC is set to DHCP (not Static)
+- Verify server and PC are on same network
+- Check switch connections
+
+### FTP connection fails:
+- Verify FTP service is ON
+- Check username/password
+- Verify IP address is correct
+- Ping server first to check connectivity
+- Check firewall/ACL rules
+
+### HTTP page not loading:
+- Verify HTTP service is ON
+- Check server IP is correct
+- Test with ping first
+- Try http:// not https://
+- Check browser URL format
+
+### Firewall not blocking:
+- Verify ACL syntax is correct
+- Check ACL is applied to interface
+- Use `show access-lists` to verify
+- Remember: Order matters in ACLs
+- Add `permit ip any any` at end
+
+---
+
+## SERVER TYPES SUMMARY
+
+| Server Type | Purpose | Protocol | Port |
+|-------------|---------|----------|------|
+| DHCP | Auto IP assignment | DHCP | 67/68 |
+| FTP | File transfer | FTP | 21 |
+| HTTP | Web hosting | HTTP | 80 |
+| HTTPS | Secure web | HTTPS | 443 |
+| DNS | Name resolution | DNS | 53 |
+| Mail | Email | SMTP/POP3/IMAP | 25/110/143 |
+
+---
+
+## ACL TYPES
+
+**Standard ACL (1-99):**
+- Filters based on source IP only
+- Applied close to destination
+
+**Extended ACL (100-199):**
+- Filters based on source, destination, protocol, port
+- Applied close to source
+- More granular control
+
+---
+
+## PRACTICAL USES
+
+**DHCP:**
+- Home WiFi networks
+- Office networks
+- Schools/colleges
+
+**FTP:**
+- Website file uploads
+- Sharing large files
+- System backups
+
+**HTTP:**
+- Company websites
+- Internal portals
+- Web applications
+
+**Firewall:**
+- Block malicious traffic
+- Control user access
+- Protect sensitive servers
+- Implement security policies
+
+---
+
+## CONCLUSION TEMPLATE
+
+Successfully configured DHCP, FTP, and HTTP servers in Cisco Packet Tracer. 
+DHCP server automatically assigned IP addresses to client PCs, eliminating 
+manual configuration. FTP server enabled file transfer capabilities with 
+user authentication. HTTP server hosted a web page accessible via browser. 
+Additionally, implemented Access Control Lists (ACLs) to demonstrate firewall 
+functionality, showing how to permit or deny traffic based on security policies.
+
+---
+
+END OF MANUAL

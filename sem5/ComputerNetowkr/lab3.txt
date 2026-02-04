@@ -1,0 +1,198 @@
+# Lab 3: Cisco Commands in Packet Tracer
+## Step-by-Step Manual
+
+---
+
+## STEP 1: BUILD THE NETWORK
+
+### Add Devices:
+- 1 Router (2911)
+- 2 Switches (2960)
+- 4 PCs (2 per switch)
+
+### Connect Devices (Copper Straight-Through):
+- PC0 → Switch0
+- PC1 → Switch0
+- PC2 → Switch1
+- PC3 → Switch1
+- Switch0 → Router GigabitEthernet0/0
+- Switch1 → Router GigabitEthernet0/1
+
+---
+
+## STEP 2: CONFIGURE PC IP ADDRESSES
+
+### Network 1 (Switch0):
+**PC0:**
+- IP: 192.168.1.10
+- Subnet: 255.255.255.0
+- Gateway: 192.168.1.1
+
+**PC1:**
+- IP: 192.168.1.11
+- Subnet: 255.255.255.0
+- Gateway: 192.168.1.1
+
+### Network 2 (Switch1):
+**PC2:**
+- IP: 192.168.2.10
+- Subnet: 255.255.255.0
+- Gateway: 192.168.2.1
+
+**PC3:**
+- IP: 192.168.2.11
+- Subnet: 255.255.255.0
+- Gateway: 192.168.2.1
+
+---
+
+## STEP 3: CONFIGURE ROUTER (CLI)
+
+### Click Router → CLI Tab → Press Enter
+
+### Basic Configuration:
+```
+enable
+configure terminal
+hostname RouterLab
+enable password cisco
+enable secret cisco
+service password-encryption
+```
+
+### Configure Interface for Switch0:
+```
+interface gigabitEthernet 0/0
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+exit
+```
+
+### Configure Interface for Switch1:
+```
+interface gigabitEthernet 0/1
+ip address 192.168.2.1 255.255.255.0
+no shutdown
+exit
+```
+
+### Save Configuration:
+```
+exit
+copy running-config startup-config
+```
+(Press Enter to confirm)
+
+---
+
+## STEP 4: VERIFY CONFIGURATION
+
+### Run these commands in Router CLI:
+
+```
+show ip interface brief
+```
+(Shows all interfaces and their IPs)
+
+```
+show running-config
+```
+(Shows current configuration)
+
+```
+show ip route
+```
+(Shows routing table)
+
+---
+
+## STEP 5: TEST CONNECTIVITY
+
+### From PC0 (Command Prompt):
+
+**Test same network:**
+```
+ping 192.168.1.11
+```
+Expected: 4 replies ✓
+
+**Test different network:**
+```
+ping 192.168.2.10
+```
+Expected: 4 replies ✓
+
+**Trace route:**
+```
+tracert 192.168.2.10
+```
+Expected: Shows path through router
+
+---
+
+## STEP 6: SCREENSHOTS NEEDED
+
+1. Network topology (full view)
+2. PC0 IP configuration
+3. PC2 IP configuration
+4. Router interface config (GigabitEthernet0/0)
+5. Router interface config (GigabitEthernet0/1)
+6. show ip interface brief output
+7. Successful ping from PC0 to PC2
+8. Traceroute output
+
+---
+
+## IMPORTANT COMMANDS SUMMARY
+
+### Configuration Mode:
+- enable → Enter privileged mode
+- configure terminal → Enter config mode
+- exit → Go back one level
+- end → Exit to privileged mode
+
+### Interface Commands:
+- interface gigabitEthernet 0/0 → Select interface
+- ip address [IP] [MASK] → Set IP
+- no shutdown → Turn interface ON
+- shutdown → Turn interface OFF
+
+### Save & View:
+- copy running-config startup-config → Save config
+- show running-config → View current config
+- show startup-config → View saved config
+- show ip interface brief → View all interfaces
+
+### Testing:
+- ping [IP] → Test connectivity
+- tracert [IP] → Show route path
+- arp -a → Show MAC addresses
+
+---
+
+## TROUBLESHOOTING
+
+**If ping fails:**
+- Wait 30-60 seconds
+- Check all connections are green
+- Verify IPs are correct
+- Check gateway settings on PCs
+- Use "show ip interface brief" on router
+
+**Common mistakes:**
+- Forgot "no shutdown" on router interfaces
+- Wrong gateway on PCs
+- Typos in IP addresses
+- Not saving config
+
+---
+
+## CONCLUSION TEMPLATE
+
+Successfully created a two-LAN network connected by a router. Configured router 
+interfaces using CLI commands. Tested connectivity between different networks 
+using ping and traceroute. All PCs can communicate across LANs through the router.
+
+---
+
+END OF MANUAL

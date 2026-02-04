@@ -1,0 +1,408 @@
+# Lab 5: Inter-VLAN Routing Using Router-on-a-Stick
+## Step-by-Step Manual
+
+---
+
+## WHAT IS ROUTER-ON-A-STICK?
+
+Router-on-a-Stick is a method where a single router interface is used to route 
+traffic between multiple VLANs. The router interface is divided into sub-interfaces, 
+with each sub-interface handling traffic for a specific VLAN.
+
+**Why use it?**
+- Cost-effective (only need 1 router port)
+- Enables Inter-VLAN communication
+- Uses VLAN tagging (802.1Q trunking)
+
+---
+
+## STEP 1: BUILD THE NETWORK TOPOLOGY
+
+### Add Devices:
+- 1 Router (2911 or 1841)
+- 1 Switch (2960)
+- 4 PCs
+
+### Connect Devices (Copper Straight-Through):
+- PC0 → Switch0 Port Fa0/1
+- PC1 → Switch0 Port Fa0/2
+- PC2 → Switch0 Port Fa0/3
+- PC3 → Switch0 Port Fa0/4
+- Switch0 Port Fa0/24 → Router GigabitEthernet0/0
+
+**Important:** Only ONE cable from switch to router!
+
+---
+
+## STEP 2: CONFIGURE PC IP ADDRESSES
+
+### VLAN 10 (Sales Department):
+**PC0:**
+- IP: 192.168.10.2
+- Subnet: 255.255.255.0
+- Gateway: 192.168.10.1
+
+**PC1:**
+- IP: 192.168.10.3
+- Subnet: 255.255.255.0
+- Gateway: 192.168.10.1
+
+### VLAN 20 (HR Department):
+**PC2:**
+- IP: 192.168.20.2
+- Subnet: 255.255.255.0
+- Gateway: 192.168.20.1
+
+**PC3:**
+- IP: 192.168.20.3
+- Subnet: 255.255.255.0
+- Gateway: 192.168.20.1
+
+---
+
+## STEP 3: CONFIGURE SWITCH
+
+### Click Switch0 → CLI Tab
+
+**Create VLANs:**
+```
+enable
+configure terminal
+vlan 10
+name Sales
+exit
+vlan 20
+name HR
+exit
+```
+
+**Assign PCs to VLANs:**
+```
+interface range fastEthernet 0/1-2
+switchport mode access
+switchport access vlan 10
+exit
+
+interface range fastEthernet 0/3-4
+switchport mode access
+switchport access vlan 20
+exit
+```
+
+**Configure trunk port to router:**
+```
+interface fastEthernet 0/24
+switchport mode trunk
+exit
+```
+
+**Save configuration:**
+```
+exit
+copy running-config startup-config
+```
+
+---
+
+## STEP 4: VERIFY SWITCH CONFIGURATION
+
+```
+show vlan brief
+show interface trunk
+```
+
+**You should see:**
+- VLAN 10: Fa0/1, Fa0/2
+- VLAN 20: Fa0/3, Fa0/4
+- Trunk: Fa0/24
+
+---
+
+## STEP 5: CONFIGURE ROUTER SUB-INTERFACES
+
+### Click Router → CLI Tab → Press Enter
+
+**Enter configuration mode:**
+```
+enable
+configure terminal
+```
+
+**Configure sub-interface for VLAN 10:**
+```
+interface gigabitEthernet 0/0.10
+encapsulation dot1Q 10
+ip address 192.168.10.1 255.255.255.0
+exit
+```
+
+**Configure sub-interface for VLAN 20:**
+```
+interface gigabitEthernet 0/0.20
+encapsulation dot1Q 20
+ip address 192.168.20.1 255.255.255.0
+exit
+```
+
+**Enable the physical interface:**
+```
+interface gigabitEthernet 0/0
+no shutdown
+exit
+```
+
+**Save configuration:**
+```
+exit
+copy running-config startup-config
+```
+
+---
+
+## STEP 6: VERIFY ROUTER CONFIGURATION
+
+```
+show ip interface brief
+show ip route
+```
+
+**You should see:**
+- GigabitEthernet0/0.10 with IP 192.168.10.1
+- GigabitEthernet0/0.20 with IP 192.168.20.1
+- Both interfaces up/up
+
+---
+
+## STEP 7: TEST CONNECTIVITY (SAME VLAN)
+
+### From PC0 (VLAN 10):
+
+**Ping PC1 (same VLAN):**
+```
+ping 192.168.10.3
+```
+**Expected:** ✓ Success (4 replies)
+
+**Ping gateway:**
+```
+ping 192.168.10.1
+```
+**Expected:** ✓ Success
+
+---
+
+## STEP 8: TEST INTER-VLAN ROUTING
+
+### From PC0 (VLAN 10):
+
+**Ping PC2 (VLAN 20):**
+```
+ping 192.168.20.2
+```
+**Expected:** ✓ Success (Inter-VLAN routing working!)
+
+**Ping PC3 (VLAN 20):**
+```
+ping 192.168.20.3
+```
+**Expected:** ✓ Success
+
+**Screenshot these successful pings!**
+
+### From PC2 (VLAN 20):
+
+**Ping PC0 (VLAN 10):**
+```
+ping 192.168.10.2
+```
+**Expected:** ✓ Success
+
+---
+
+## STEP 9: TEST TRACEROUTE
+
+### From PC0:
+
+```
+tracert 192.168.20.2
+```
+
+**Expected path:**
+- Hop 1: 192.168.10.1 (router gateway)
+- Hop 2: 192.168.20.2 (destination)
+
+This shows traffic is going through the router!
+
+---
+
+## HOW ROUTER-ON-A-STICK WORKS
+
+1. PC0 (VLAN 10) sends packet to PC2 (VLAN 20)
+2. Packet goes to default gateway (192.168.10.1)
+3. Switch forwards packet to router via trunk (tagged with VLAN 10)
+4. Router receives on sub-interface Gi0/0.10
+5. Router routes to VLAN 20 network
+6. Router sends packet out sub-interface Gi0/0.20
+7. Switch receives tagged packet (VLAN 20) and forwards to PC2
+
+---
+
+## COMMAND EXPLANATION
+
+### Sub-Interface Configuration:
+```
+interface gigabitEthernet 0/0.10
+```
+- Creates sub-interface .10 on physical interface Gi0/0
+- The .10 is just a number (usually matches VLAN ID for clarity)
+
+```
+encapsulation dot1Q 10
+```
+- Enables 802.1Q VLAN tagging
+- Associates this sub-interface with VLAN 10
+
+```
+ip address 192.168.10.1 255.255.255.0
+```
+- Assigns IP to sub-interface
+- This IP becomes the gateway for VLAN 10
+
+```
+no shutdown
+```
+- Activates the physical interface
+- All sub-interfaces become active when physical interface is up
+
+---
+
+## COMMAND SUMMARY
+
+### Switch Commands:
+```
+vlan [number]                    - Create VLAN
+name [vlan_name]                 - Name VLAN
+switchport mode access           - Set port as access
+switchport access vlan [number]  - Assign port to VLAN
+switchport mode trunk            - Set port as trunk
+show vlan brief                  - Show VLANs
+show interface trunk             - Show trunk ports
+```
+
+### Router Commands:
+```
+interface [interface].[sub-number]  - Create sub-interface
+encapsulation dot1Q [vlan-id]       - Enable VLAN tagging
+ip address [IP] [MASK]              - Assign IP to sub-interface
+no shutdown                          - Enable interface
+show ip interface brief             - Show all interfaces
+show ip route                       - Show routing table
+```
+
+---
+
+## SCREENSHOTS NEEDED
+
+1. **Network topology** - Router connected to switch with one cable
+2. **Switch VLAN configuration** - show vlan brief
+3. **Switch trunk configuration** - show interface trunk
+4. **Router sub-interfaces** - show ip interface brief
+5. **Router routing table** - show ip route
+6. **Successful ping (same VLAN)** - PC0 → PC1
+7. **Successful ping (inter-VLAN)** - PC0 → PC2
+8. **Successful ping (inter-VLAN)** - PC0 → PC3
+9. **Traceroute output** - PC0 → PC2
+
+---
+
+## TROUBLESHOOTING
+
+### Inter-VLAN routing not working:
+
+**Check trunk on switch:**
+```
+show interface trunk
+```
+- Fa0/24 should be in trunk mode
+
+**Check router sub-interfaces:**
+```
+show ip interface brief
+```
+- All sub-interfaces should show "up/up"
+- If down, check "no shutdown" on physical interface
+
+**Check encapsulation:**
+```
+show running-config
+```
+- Verify "encapsulation dot1Q [vlan-id]" matches switch VLANs
+
+**Check gateways on PCs:**
+- VLAN 10 PCs should have gateway 192.168.10.1
+- VLAN 20 PCs should have gateway 192.168.20.1
+
+**Common mistakes:**
+- Forgot "no shutdown" on physical interface Gi0/0
+- Trunk not configured on switch port
+- Wrong VLAN ID in encapsulation command
+- Gateway not configured on PCs
+- Wrong IP addresses on sub-interfaces
+
+---
+
+## ADDITIONAL VERIFICATION COMMANDS
+
+### On Router:
+```
+show running-config interface gigabitEthernet 0/0
+show running-config interface gigabitEthernet 0/0.10
+show running-config interface gigabitEthernet 0/0.20
+show ip route connected
+```
+
+### On Switch:
+```
+show running-config
+show vlan
+show mac address-table
+```
+
+### On PC:
+```
+ping [gateway-ip]
+ipconfig (in older Packet Tracer)
+arp -a
+```
+
+---
+
+## COMPARISON: ROUTER-ON-A-STICK vs LAYER 3 SWITCH
+
+**Router-on-a-Stick:**
+- Uses 1 physical router port
+- Uses sub-interfaces with VLAN tagging
+- Requires trunk connection
+- Slower (all traffic goes through one link)
+- More affordable
+
+**Layer 3 Switch:**
+- Uses SVI (Switch Virtual Interfaces)
+- Routing happens at hardware level
+- Faster performance
+- More expensive
+- Used in larger networks
+
+---
+
+## CONCLUSION TEMPLATE
+
+Successfully configured Inter-VLAN routing using the Router-on-a-Stick method. 
+Created two VLANs on a switch and configured router sub-interfaces with 802.1Q 
+encapsulation. Devices in different VLANs can now communicate through the router, 
+demonstrating that a single physical router interface can handle traffic for 
+multiple VLANs using sub-interfacing and VLAN tagging.
+
+---
+
+END OF MANUAL

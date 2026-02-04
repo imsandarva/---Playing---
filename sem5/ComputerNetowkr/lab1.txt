@@ -1,0 +1,116 @@
+# Lab 1: Peer-to-Peer Network in Cisco Packet Tracer
+## Step-by-Step Manual
+
+---
+
+## OBJECTIVE
+
+- Learn to use Cisco Packet Tracer
+- Connect two PCs directly (peer-to-peer)
+- Test connectivity
+
+---
+
+## WHAT IS PEER-TO-PEER (P2P)?
+
+Two computers connected directly without a switch or router.
+Both can share files and communicate equally.
+
+---
+
+## STEP 1: OPEN CISCO PACKET TRACER
+
+Launch the application on your Ubuntu system.
+
+---
+
+## STEP 2: ADD TWO PCs
+
+1. Click **End Devices** icon (computer icon at bottom)
+2. Click **PC**
+3. Drag **2 PCs** onto the workspace
+4. They'll be named PC0 and PC1
+
+---
+
+## STEP 3: CONNECT THE PCs
+
+1. Click **Connections** icon (lightning bolt)
+2. Select **Copper Cross-Over** cable (dotted line)
+3. Click **PC0** → select **FastEthernet0**
+4. Click **PC1** → select **FastEthernet0**
+5. Wait for orange dots to turn **green** (~30 seconds)
+
+---
+
+## STEP 4: CONFIGURE PC0 IP ADDRESS
+
+1. Click **PC0**
+2. Click **Desktop** tab
+3. Click **IP Configuration**
+4. Enter:
+   - IP Address: **192.168.1.1**
+   - Subnet Mask: **255.255.255.0**
+5. Close window
+
+---
+
+## STEP 5: CONFIGURE PC1 IP ADDRESS
+
+1. Click **PC1**
+2. Click **Desktop** tab
+3. Click **IP Configuration**
+4. Enter:
+   - IP Address: **192.168.1.2**
+   - Subnet Mask: **255.255.255.0**
+5. Close window
+
+---
+
+## STEP 6: TEST CONNECTIVITY
+
+### From PC0:
+
+1. Click **PC0** → **Desktop** → **Command Prompt**
+2. Type: `ping 192.168.1.2`
+3. Press Enter
+
+**Expected:** 4 successful replies ✓
+
+### From PC1:
+
+1. Click **PC1** → **Desktop** → **Command Prompt**
+2. Type: `ping 192.168.1.1`
+3. Press Enter
+
+**Expected:** 4 successful replies ✓
+
+---
+
+## SCREENSHOTS NEEDED
+
+1. Network topology (2 PCs connected)
+2. PC0 IP configuration
+3. PC1 IP configuration
+4. Successful ping from PC0 to PC1
+
+---
+
+## TROUBLESHOOTING
+
+**If ping fails:**
+- Wait 30-60 seconds (connection needs time)
+- Check IPs are in same network (192.168.1.x)
+- Verify cable shows green dots
+- Check you used Cross-Over cable
+
+---
+
+## CONCLUSION
+
+Successfully connected two PCs directly in a peer-to-peer network. 
+Configured IP addresses and verified connectivity using ping command.
+
+---
+
+END OF MANUAL

@@ -1,0 +1,530 @@
+# Lab 2: Configuration of Two Different LANs and Check Connectivity
+## Step-by-Step Manual
+
+---
+
+## OBJECTIVE
+
+- Setup LAN using switches
+- Create Star topology networks
+- Connect two LANs using a router
+- Test connectivity between different networks
+
+---
+
+## WHAT YOU'LL LEARN
+
+**Network Topologies:**
+- **Star Topology:** All devices connect to a central switch
+- **Extended Star:** Multiple switches connected together
+
+**Devices:**
+- **Switch:** Connects devices within a LAN (Layer 2)
+- **Router:** Connects different networks together (Layer 3)
+
+---
+
+## PART 1: CREATE LAN 1 (STAR TOPOLOGY)
+
+### STEP 1: BUILD FIRST NETWORK
+
+**Add Devices:**
+- 1 Switch (2960) - This will be Switch0
+- 3-4 PCs
+
+**Connect (Copper Straight-Through):**
+- PC0 → Switch0 Port Fa0/1
+- PC1 → Switch0 Port Fa0/2
+- PC2 → Switch0 Port Fa0/3
+- PC3 → Switch0 Port Fa0/4
+
+This creates a **Star Topology** - all PCs connect to central switch
+
+---
+
+### STEP 2: CONFIGURE IP ADDRESSES FOR LAN 1
+
+**Network: 192.168.1.0/24**
+
+**PC0:**
+- IP Address: 192.168.1.2
+- Subnet Mask: 255.255.255.0
+- Default Gateway: (leave blank for now)
+
+**PC1:**
+- IP Address: 192.168.1.3
+- Subnet Mask: 255.255.255.0
+- Default Gateway: (leave blank for now)
+
+**PC2:**
+- IP Address: 192.168.1.4
+- Subnet Mask: 255.255.255.0
+- Default Gateway: (leave blank for now)
+
+**PC3:**
+- IP Address: 192.168.1.5
+- Subnet Mask: 255.255.255.0
+- Default Gateway: (leave blank for now)
+
+**How to configure:**
+Click PC → Desktop → IP Configuration → Enter values
+
+---
+
+### STEP 3: TEST CONNECTIVITY WITHIN LAN 1
+
+**From PC0:**
+
+**Click PC0 → Desktop → Command Prompt**
+
+```
+ping 192.168.1.3
+ping 192.168.1.4
+ping 192.168.1.5
+```
+
+**Expected:** ✓ All should work (4 replies each)
+
+**Screenshot successful ping within same switch!**
+
+This proves devices in same LAN can communicate!
+
+---
+
+## PART 2: CREATE LAN 2 (STAR TOPOLOGY)
+
+### STEP 4: BUILD SECOND NETWORK
+
+**Add Devices:**
+- 1 Switch (2960) - This will be Switch1
+- 3-4 PCs
+
+**Connect (Copper Straight-Through):**
+- PC4 → Switch1 Port Fa0/1
+- PC5 → Switch1 Port Fa0/2
+- PC6 → Switch1 Port Fa0/3
+- PC7 → Switch1 Port Fa0/4
+
+Place this network separate from LAN 1 (they're not connected yet)
+
+---
+
+### STEP 5: CONFIGURE IP ADDRESSES FOR LAN 2
+
+**Network: 192.168.2.0/24**
+
+**PC4:**
+- IP Address: 192.168.2.2
+- Subnet Mask: 255.255.255.0
+- Default Gateway: (leave blank for now)
+
+**PC5:**
+- IP Address: 192.168.2.3
+- Subnet Mask: 255.255.255.0
+- Default Gateway: (leave blank for now)
+
+**PC6:**
+- IP Address: 192.168.2.4
+- Subnet Mask: 255.255.255.0
+- Default Gateway: (leave blank for now)
+
+**PC7:**
+- IP Address: 192.168.2.5
+- Subnet Mask: 255.255.255.0
+- Default Gateway: (leave blank for now)
+
+---
+
+### STEP 6: TEST CONNECTIVITY WITHIN LAN 2
+
+**From PC4:**
+
+```
+ping 192.168.2.3
+ping 192.168.2.4
+ping 192.168.2.5
+```
+
+**Expected:** ✓ All should work
+
+---
+
+### STEP 7: TRY TO PING ACROSS LANs (WILL FAIL)
+
+**From PC0 (LAN 1):**
+
+```
+ping 192.168.2.2
+```
+
+**Expected:** ✗ Request timed out (Networks not connected yet!)
+
+This shows you need a router to connect different networks.
+
+---
+
+## PART 3: CONNECT TWO LANs USING ROUTER
+
+### STEP 8: ADD ROUTER
+
+**Add Device:**
+- 1 Router (2911 or 1841)
+
+Place router between the two switches
+
+---
+
+### STEP 9: CONNECT SWITCHES TO ROUTER
+
+**Connect (Copper Straight-Through):**
+- Switch0 Port Fa0/24 → Router GigabitEthernet0/0
+- Switch1 Port Fa0/24 → Router GigabitEthernet0/1
+
+**Wait for connections to turn green**
+
+---
+
+### STEP 10: CONFIGURE ROUTER INTERFACE FOR LAN 1
+
+**Click Router → CLI Tab**
+
+```
+enable
+configure terminal
+interface gigabitEthernet 0/0
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+exit
+```
+
+**What this does:**
+- Sets router's IP on LAN 1 side to 192.168.1.1
+- This will be the gateway for LAN 1 PCs
+- `no shutdown` turns the interface ON
+
+---
+
+### STEP 11: CONFIGURE ROUTER INTERFACE FOR LAN 2
+
+**Continue in Router CLI:**
+
+```
+interface gigabitEthernet 0/1
+ip address 192.168.2.1 255.255.255.0
+no shutdown
+exit
+exit
+```
+
+**What this does:**
+- Sets router's IP on LAN 2 side to 192.168.2.1
+- This will be the gateway for LAN 2 PCs
+
+---
+
+### STEP 12: SAVE ROUTER CONFIGURATION
+
+```
+copy running-config startup-config
+```
+
+Press Enter to confirm
+
+---
+
+### STEP 13: VERIFY ROUTER CONFIGURATION
+
+```
+show ip interface brief
+```
+
+**You should see:**
+- GigabitEthernet0/0: 192.168.1.1 (up/up)
+- GigabitEthernet0/1: 192.168.2.1 (up/up)
+
+Both interfaces should show "up" status
+
+**Screenshot this!**
+
+---
+
+## PART 4: CONFIGURE GATEWAYS ON PCs
+
+### STEP 14: ADD GATEWAY TO LAN 1 PCs
+
+**For PC0, PC1, PC2, PC3:**
+
+Click PC → Desktop → IP Configuration
+
+**Add Default Gateway:** 192.168.1.1
+
+(Keep IP and Subnet same as before)
+
+The gateway tells PCs how to reach other networks
+
+---
+
+### STEP 15: ADD GATEWAY TO LAN 2 PCs
+
+**For PC4, PC5, PC6, PC7:**
+
+Click PC → Desktop → IP Configuration
+
+**Add Default Gateway:** 192.168.2.1
+
+---
+
+## PART 5: TEST INTER-NETWORK CONNECTIVITY
+
+### STEP 16: PING ACROSS NETWORKS
+
+**From PC0 (LAN 1):**
+
+**Ping gateway first:**
+```
+ping 192.168.1.1
+```
+**Expected:** ✓ Success
+
+**Ping PC in LAN 2:**
+```
+ping 192.168.2.2
+```
+**Expected:** ✓ Success (Inter-network communication working!)
+
+**Screenshot this successful ping!**
+
+---
+
+### STEP 17: PING FROM LAN 2 TO LAN 1
+
+**From PC4 (LAN 2):**
+
+```
+ping 192.168.1.2
+ping 192.168.1.3
+```
+
+**Expected:** ✓ Success
+
+---
+
+### STEP 18: TRACEROUTE TEST
+
+**From PC0:**
+
+```
+tracert 192.168.2.2
+```
+
+**Expected hops:**
+1. 192.168.1.1 (Router - LAN 1 side)
+2. 192.168.2.2 (PC4 in LAN 2)
+
+This shows traffic goes through the router!
+
+---
+
+## NETWORK SUMMARY
+
+### LAN 1 (Star Topology):
+- **Network:** 192.168.1.0/24
+- **Switch0** connects 4 PCs
+- **Gateway:** 192.168.1.1 (Router)
+- **PCs:** 192.168.1.2 to 192.168.1.5
+
+### LAN 2 (Star Topology):
+- **Network:** 192.168.2.0/24
+- **Switch1** connects 4 PCs
+- **Gateway:** 192.168.2.1 (Router)
+- **PCs:** 192.168.2.2 to 192.168.2.5
+
+### Router:
+- **Interface Gi0/0:** 192.168.1.1 (connects to Switch0)
+- **Interface Gi0/1:** 192.168.2.1 (connects to Switch1)
+- **Purpose:** Routes traffic between the two LANs
+
+---
+
+## IP ADDRESSING TABLE
+
+| Device | Interface/PC | IP Address    | Subnet Mask     | Gateway       |
+|--------|--------------|---------------|-----------------|---------------|
+| Router | Gi0/0        | 192.168.1.1   | 255.255.255.0   | -             |
+| Router | Gi0/1        | 192.168.2.1   | 255.255.255.0   | -             |
+| PC0    | Switch0      | 192.168.1.2   | 255.255.255.0   | 192.168.1.1   |
+| PC1    | Switch0      | 192.168.1.3   | 255.255.255.0   | 192.168.1.1   |
+| PC2    | Switch0      | 192.168.1.4   | 255.255.255.0   | 192.168.1.1   |
+| PC3    | Switch0      | 192.168.1.5   | 255.255.255.0   | 192.168.1.1   |
+| PC4    | Switch1      | 192.168.2.2   | 255.255.255.0   | 192.168.2.1   |
+| PC5    | Switch1      | 192.168.2.3   | 255.255.255.0   | 192.168.2.1   |
+| PC6    | Switch1      | 192.168.2.4   | 255.255.255.0   | 192.168.2.1   |
+| PC7    | Switch1      | 192.168.2.5   | 255.255.255.0   | 192.168.2.1   |
+
+---
+
+## COMMAND SUMMARY
+
+### Router Configuration:
+```
+enable                           - Enter privileged mode
+configure terminal               - Enter configuration mode
+interface gigabitEthernet 0/0    - Select interface
+ip address [IP] [MASK]           - Assign IP to interface
+no shutdown                      - Enable interface
+exit                             - Exit interface config
+copy running-config startup-config - Save configuration
+```
+
+### Verification Commands:
+```
+show ip interface brief          - Show all interfaces
+show running-config              - Show current config
+show ip route                    - Show routing table
+```
+
+### PC Testing:
+```
+ping [IP]                        - Test connectivity
+tracert [IP]                     - Show route path
+ipconfig                         - Show PC network info
+```
+
+---
+
+## TOPOLOGY TYPES EXPLAINED
+
+### Star Topology:
+```
+      PC0
+       |
+PC1--Switch--PC2
+       |
+      PC3
+```
+- All devices connect to central switch
+- Easy to manage and troubleshoot
+- If switch fails, whole network down
+- Used in this lab for both LANs
+
+### Extended Star:
+```
+    PC--Switch1--PC
+         |
+      Switch2
+         |
+    PC--Switch3--PC
+```
+- Multiple switches connected
+- More scalability
+- If one switch fails, others still work
+
+---
+
+## SCREENSHOTS NEEDED
+
+1. **Network topology** - Full view showing both LANs and router
+2. **LAN 1 layout** - Star topology with Switch0 and PCs
+3. **LAN 2 layout** - Star topology with Switch1 and PCs
+4. **PC IP configuration** - Example from LAN 1
+5. **PC IP configuration** - Example from LAN 2
+6. **Successful ping within LAN 1** - PC0 to PC3
+7. **Router interface configuration** - show ip interface brief
+8. **Router Gi0/0 configuration** - Commands or config view
+9. **Router Gi0/1 configuration** - Commands or config view
+10. **Successful ping across LANs** - PC0 to PC4
+11. **Traceroute output** - PC0 to PC4
+
+---
+
+## TROUBLESHOOTING
+
+### PCs in same LAN can't ping:
+- Check all PCs have correct IP addresses
+- Verify subnet mask is 255.255.255.0
+- Check cables are connected (green dots)
+- Try pinging yourself first: `ping [your-own-IP]`
+
+### Can't ping across LANs:
+- Check router interfaces are up: `show ip interface brief`
+- Verify gateway is configured on PCs
+- Gateway must match router's IP on that LAN
+- Check router interface IPs are correct
+- Verify "no shutdown" on router interfaces
+
+### Router interface down:
+- Check cable connection
+- Use `no shutdown` command
+- Verify correct interface name (Gi0/0 or FastEthernet0/0)
+- Check switch port is working
+
+### Gateway issues:
+- Gateway for LAN 1 = 192.168.1.1
+- Gateway for LAN 2 = 192.168.2.1
+- Must match router's IP on that side
+
+**Common mistakes:**
+- Forgot to add gateway on PCs
+- Wrong gateway IP
+- Forgot "no shutdown" on router
+- Wrong IP addresses (mixing LAN 1 and LAN 2 IPs)
+- Not saving router configuration
+
+---
+
+## HOW ROUTING WORKS
+
+**When PC0 (192.168.1.2) pings PC4 (192.168.2.2):**
+
+1. **PC0 checks:** Is 192.168.2.2 on my network?
+   - No (different subnet)
+   - Send to gateway (192.168.1.1)
+
+2. **Packet goes to Router:**
+   - Router receives on Gi0/0
+   - Checks routing table
+   - Destination 192.168.2.2 is on Gi0/1 network
+
+3. **Router forwards:**
+   - Sends packet out Gi0/1
+   - Goes to Switch1
+   - Delivered to PC4
+
+4. **PC4 replies:**
+   - Same process in reverse
+   - Through router back to PC0
+
+---
+
+## SWITCH vs ROUTER
+
+### Switch (Layer 2):
+- **Connects:** Devices within same network
+- **Uses:** MAC addresses
+- **Function:** Forwards frames within LAN
+- **Example:** All PCs on Switch0 communicate via switch
+
+### Router (Layer 3):
+- **Connects:** Different networks
+- **Uses:** IP addresses
+- **Function:** Routes packets between networks
+- **Example:** Connects LAN 1 (192.168.1.0) to LAN 2 (192.168.2.0)
+
+**You need BOTH:**
+- Switch for connecting devices in a LAN
+- Router for connecting LANs together
+
+---
+
+## CONCLUSION TEMPLATE
+
+Successfully created two separate LANs using star topology with switches. 
+LAN 1 (192.168.1.0/24) and LAN 2 (192.168.2.0/24) were connected using a 
+router. Configured router interfaces to serve as gateways for each LAN. 
+Tested connectivity within each LAN and across LANs. Router successfully 
+routed traffic between the two networks, demonstrating how different LANs 
+can communicate through a Layer 3 device.
+
+---
+
+END OF MANUAL

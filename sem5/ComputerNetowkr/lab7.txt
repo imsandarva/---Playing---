@@ -1,0 +1,602 @@
+# Lab 7: Configuration of RIP (Routing Information Protocol)
+## Step-by-Step Manual
+
+---
+
+## WHAT IS RIP?
+
+RIP (Routing Information Protocol) is a dynamic routing protocol that automatically 
+learns routes and shares them with neighboring routers.
+
+**Key Features:**
+- Distance Vector Protocol
+- Uses hop count as metric (max 15 hops)
+- Sends updates every 30 seconds
+- Simple to configure
+- Best for small networks
+
+**RIP vs Static Routing:**
+- **Static:** You manually add each route
+- **RIP:** Routers automatically learn and share routes
+
+---
+
+## STEP 1: BUILD THE NETWORK TOPOLOGY
+
+### Add Devices:
+- 3 Routers (2911 or 1841)
+- 3 Switches (2960)
+- 6 PCs (2 per switch)
+
+### Add Serial Modules to Routers:
+
+**For each router:**
+1. Click Router → Physical Tab
+2. Turn OFF router (power button)
+3. Drag **HWIC-2T** module to empty slot
+4. Turn ON router
+5. Wait for boot up
+
+---
+
+## STEP 2: CONNECT DEVICES
+
+### Connect PCs to Switches (Copper Straight-Through):
+- PC0, PC1 → Switch0
+- PC2, PC3 → Switch1
+- PC4, PC5 → Switch2
+
+### Connect Switches to Routers (Copper Straight-Through):
+- Switch0 → Router0 FastEthernet0/0
+- Switch1 → Router1 FastEthernet0/0
+- Switch2 → Router2 FastEthernet0/0
+
+### Connect Routers (Serial DCE):
+- Router0 Serial0/0/0 → Router1 Serial0/0/0
+- Router1 Serial0/0/1 → Router2 Serial0/0/1
+
+---
+
+## STEP 3: CONFIGURE PC IP ADDRESSES
+
+### Network 1 (Router0 - 192.168.1.0/24):
+**PC0:**
+- IP: 192.168.1.2
+- Subnet: 255.255.255.0
+- Gateway: 192.168.1.1
+
+**PC1:**
+- IP: 192.168.1.3
+- Subnet: 255.255.255.0
+- Gateway: 192.168.1.1
+
+### Network 2 (Router1 - 192.168.2.0/24):
+**PC2:**
+- IP: 192.168.2.2
+- Subnet: 255.255.255.0
+- Gateway: 192.168.2.1
+
+**PC3:**
+- IP: 192.168.2.3
+- Subnet: 255.255.255.0
+- Gateway: 192.168.2.1
+
+### Network 3 (Router2 - 192.168.3.0/24):
+**PC4:**
+- IP: 192.168.3.2
+- Subnet: 255.255.255.0
+- Gateway: 192.168.3.1
+
+**PC5:**
+- IP: 192.168.3.3
+- Subnet: 255.255.255.0
+- Gateway: 192.168.3.1
+
+---
+
+## STEP 4: CONFIGURE ROUTER0 INTERFACES
+
+### Click Router0 → CLI Tab
+
+```
+enable
+configure terminal
+```
+
+### Configure LAN Interface:
+```
+interface fastEthernet 0/0
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+exit
+```
+
+### Configure WAN Interface (to Router1):
+```
+interface serial 0/0/0
+ip address 10.0.0.1 255.255.255.252
+clock rate 64000
+no shutdown
+exit
+```
+
+---
+
+## STEP 5: CONFIGURE ROUTER1 INTERFACES
+
+### Click Router1 → CLI Tab
+
+```
+enable
+configure terminal
+```
+
+### Configure LAN Interface:
+```
+interface fastEthernet 0/0
+ip address 192.168.2.1 255.255.255.0
+no shutdown
+exit
+```
+
+### Configure WAN Interface (to Router0):
+```
+interface serial 0/0/0
+ip address 10.0.0.2 255.255.255.252
+no shutdown
+exit
+```
+
+### Configure WAN Interface (to Router2):
+```
+interface serial 0/0/1
+ip address 10.0.0.5 255.255.255.252
+clock rate 64000
+no shutdown
+exit
+```
+
+---
+
+## STEP 6: CONFIGURE ROUTER2 INTERFACES
+
+### Click Router2 → CLI Tab
+
+```
+enable
+configure terminal
+```
+
+### Configure LAN Interface:
+```
+interface fastEthernet 0/0
+ip address 192.168.3.1 255.255.255.0
+no shutdown
+exit
+```
+
+### Configure WAN Interface (to Router1):
+```
+interface serial 0/0/1
+ip address 10.0.0.6 255.255.255.252
+no shutdown
+exit
+```
+
+---
+
+## STEP 7: VERIFY ALL INTERFACES ARE UP
+
+### On each router:
+```
+show ip interface brief
+```
+
+**All interfaces should show "up/up"**
+
+---
+
+## STEP 8: CONFIGURE RIP ON ROUTER0
+
+```
+enable
+configure terminal
+router rip
+version 2
+network 192.168.1.0
+network 10.0.0.0
+no auto-summary
+exit
+```
+
+**Save configuration:**
+```
+copy running-config startup-config
+```
+
+---
+
+## STEP 9: CONFIGURE RIP ON ROUTER1
+
+```
+enable
+configure terminal
+router rip
+version 2
+network 192.168.2.0
+network 10.0.0.0
+no auto-summary
+exit
+```
+
+**Save configuration:**
+```
+copy running-config startup-config
+```
+
+---
+
+## STEP 10: CONFIGURE RIP ON ROUTER2
+
+```
+enable
+configure terminal
+router rip
+version 2
+network 192.168.3.0
+network 10.0.0.0
+no auto-summary
+exit
+```
+
+**Save configuration:**
+```
+copy running-config startup-config
+```
+
+---
+
+## STEP 11: VERIFY RIP CONFIGURATION
+
+### Wait 30-60 seconds for RIP convergence
+
+### On Router0:
+```
+show ip route
+```
+
+**You should see:**
+- **C** - Directly connected networks (192.168.1.0, 10.0.0.0)
+- **R** - RIP learned routes (192.168.2.0, 192.168.3.0, 10.0.0.4)
+
+### Show RIP protocol details:
+```
+show ip protocols
+```
+
+**You should see:**
+- Routing Protocol is "rip"
+- Sending updates every 30 seconds
+- Networks being advertised
+
+### Show RIP database:
+```
+show ip rip database
+```
+
+---
+
+## STEP 12: VERIFY RIP ON ALL ROUTERS
+
+### Router0 routing table should show:
+```
+C    192.168.1.0/24 is directly connected, FastEthernet0/0
+C    10.0.0.0/30 is directly connected, Serial0/0/0
+R    192.168.2.0/24 [120/1] via 10.0.0.2
+R    192.168.3.0/24 [120/2] via 10.0.0.2
+R    10.0.0.4/30 [120/1] via 10.0.0.2
+```
+
+**[120/1] means:**
+- 120 = Administrative Distance (RIP's AD)
+- 1 = Hop count (metric)
+
+---
+
+## STEP 13: TEST CONNECTIVITY
+
+### From PC0:
+
+**Ping PC1 (same network):**
+```
+ping 192.168.1.3
+```
+**Expected:** ✓ Success
+
+**Ping PC2 (Router1's network):**
+```
+ping 192.168.2.2
+```
+**Expected:** ✓ Success (1 hop through Router1)
+
+**Ping PC4 (Router2's network):**
+```
+ping 192.168.3.2
+```
+**Expected:** ✓ Success (2 hops through Router1 and Router2)
+
+**Screenshot successful pings!**
+
+---
+
+## STEP 14: TRACEROUTE TEST
+
+### From PC0:
+
+```
+tracert 192.168.3.2
+```
+
+**Expected path:**
+1. 192.168.1.1 (Router0)
+2. 10.0.0.2 (Router1)
+3. 192.168.3.2 (PC4)
+
+This shows RIP chose the correct path!
+
+---
+
+## RIP COMMAND BREAKDOWN
+
+```
+router rip
+```
+- Enters RIP configuration mode
+
+```
+version 2
+```
+- Uses RIP version 2 (supports VLSM, sends subnet masks)
+- RIP v1 is classful (doesn't support subnetting)
+
+```
+network 192.168.1.0
+```
+- Advertises this network to neighbors
+- Only use classful network address (e.g., 192.168.1.0, not 192.168.1.1)
+
+```
+no auto-summary
+```
+- Disables automatic summarization
+- Sends exact subnet information
+
+---
+
+## HOW RIP WORKS
+
+1. **Neighbor Discovery:**
+   - Routers send RIP updates to directly connected neighbors
+
+2. **Route Advertisement:**
+   - Each router shares its routing table every 30 seconds
+   - Updates include: network address, hop count
+
+3. **Route Selection:**
+   - Router chooses path with lowest hop count
+   - Maximum 15 hops (16 = unreachable)
+
+4. **Convergence:**
+   - All routers learn all routes
+   - Takes time (60-90 seconds typically)
+
+5. **Route Updates:**
+   - If link fails, routers update routes automatically
+   - Invalid routes timeout after 180 seconds
+
+---
+
+## NETWORK ADDRESSING SCHEME
+
+| Network Segment       | Network Address | Subnet Mask       | Notes           |
+|-----------------------|-----------------|-------------------|-----------------|
+| Router0 LAN           | 192.168.1.0     | 255.255.255.0     | /24 network     |
+| Router1 LAN           | 192.168.2.0     | 255.255.255.0     | /24 network     |
+| Router2 LAN           | 192.168.3.0     | 255.255.255.0     | /24 network     |
+| Router0-Router1 Link  | 10.0.0.0        | 255.255.255.252   | /30 (2 hosts)   |
+| Router1-Router2 Link  | 10.0.0.4        | 255.255.255.252   | /30 (2 hosts)   |
+
+---
+
+## RIP COMMAND SUMMARY
+
+### Configuration:
+```
+router rip                       - Enable RIP
+version 2                        - Use RIP version 2
+network [classful-network]       - Advertise network
+no auto-summary                  - Disable auto-summarization
+passive-interface [interface]    - Stop RIP updates on interface
+default-information originate    - Advertise default route
+```
+
+### Verification:
+```
+show ip route                    - Show routing table
+show ip protocols                - Show routing protocol info
+show ip rip database             - Show RIP database
+debug ip rip                     - Show RIP updates in real-time
+no debug ip rip                  - Stop debugging
+```
+
+### Troubleshooting:
+```
+clear ip route *                 - Clear routing table
+show running-config | section rip - Show RIP config only
+```
+
+---
+
+## SCREENSHOTS NEEDED
+
+1. **Network topology** - All 3 routers connected
+2. **Router0 interface config** - show ip interface brief
+3. **Router1 interface config** - show ip interface brief
+4. **Router2 interface config** - show ip interface brief
+5. **Router0 RIP config** - show running-config | section rip
+6. **Router0 routing table** - show ip route (showing R routes)
+7. **Router1 routing table** - show ip route
+8. **Router2 routing table** - show ip route
+9. **RIP protocol info** - show ip protocols
+10. **Successful ping** - PC0 to PC4
+11. **Traceroute** - PC0 to PC4
+
+---
+
+## COMPARISON: STATIC vs RIP
+
+| Feature              | Static Routing        | RIP (Dynamic)           |
+|----------------------|-----------------------|-------------------------|
+| Configuration        | Manual per route      | Automatic               |
+| Adapts to changes    | No                    | Yes                     |
+| Network overhead     | None                  | Updates every 30s       |
+| Scalability          | Poor (large networks) | Good (small/medium)     |
+| Convergence time     | Instant               | 60-90 seconds           |
+| Administrative work  | High                  | Low                     |
+| Best for             | Small, stable         | Small to medium         |
+
+---
+
+## TROUBLESHOOTING
+
+### Routes not appearing in routing table:
+
+**Check RIP is enabled:**
+```
+show ip protocols
+```
+Should show "Routing Protocol is rip"
+
+**Check networks are advertised:**
+```
+show running-config | section rip
+```
+Verify all networks are listed
+
+**Check neighbors:**
+```
+show ip route
+```
+Look for R (RIP) entries
+
+### PCs can't ping across routers:
+
+**Wait for convergence:**
+- RIP needs 30-60 seconds to learn routes
+- Check again after waiting
+
+**Verify interfaces are up:**
+```
+show ip interface brief
+```
+
+**Check RIP updates are being sent/received:**
+```
+debug ip rip
+```
+(Use `no debug ip rip` to stop)
+
+### RIP not working:
+
+**Common mistakes:**
+- Wrong network statements (must be classful)
+- Forgot "version 2"
+- Forgot "no auto-summary"
+- Interfaces are down
+- Wrong IP addresses on interfaces
+- Not waiting for convergence
+
+---
+
+## RIP CHARACTERISTICS
+
+**Pros:**
+- Easy to configure
+- Automatic route discovery
+- Adapts to topology changes
+- No manual route entry needed
+
+**Cons:**
+- Slow convergence (30-90 seconds)
+- 15 hop limit
+- Inefficient (broadcasts every 30 seconds)
+- Uses bandwidth for updates
+- Not suitable for large networks
+
+**When to use RIP:**
+- Small networks (< 15 routers)
+- Simple topology
+- Low-bandwidth requirements
+- Learning/lab environments
+
+---
+
+## ADVANCED RIP FEATURES (Optional)
+
+### Passive Interface:
+Stops RIP updates on specific interface (e.g., user-facing ports)
+```
+router rip
+passive-interface fastEthernet 0/0
+```
+
+### Default Route:
+Advertise a default route via RIP
+```
+router rip
+default-information originate
+```
+
+### Authentication (RIPv2 only):
+Secure RIP updates with passwords
+```
+interface serial 0/0/0
+ip rip authentication mode md5
+ip rip authentication key-chain MYKEY
+```
+
+---
+
+## TESTING RIP CONVERGENCE
+
+### Test failure recovery:
+
+1. Note current routes: `show ip route`
+2. Shutdown an interface: 
+   ```
+   interface serial 0/0/0
+   shutdown
+   ```
+3. Wait and check routing table updates
+4. Bring interface back up:
+   ```
+   no shutdown
+   ```
+5. Verify routes are relearned
+
+This demonstrates RIP's dynamic nature!
+
+---
+
+## CONCLUSION TEMPLATE
+
+Successfully configured RIP (Routing Information Protocol) on three routers 
+to enable dynamic routing. Unlike static routing which requires manual 
+configuration of each route, RIP automatically discovers and shares routes 
+between routers. All networks became reachable through automatic route 
+advertisement and convergence. RIP proved effective for this small network 
+topology, demonstrating the benefits of dynamic routing protocols.
+
+---
+
+END OF MANUAL
